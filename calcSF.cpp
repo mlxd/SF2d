@@ -81,7 +81,6 @@ void initialiseVortices(list<CVortex>& vorticesList, bool& file){
 	ifstream myfile (renderChar);
 	cout << "initialise Vortices" << endl;
 
-
 	if (myfile.is_open()) {
 		cout << "Initial Vortex Positions From File" << endl;
 		file = true;
@@ -148,15 +147,16 @@ int main() {
 	std::vector<double> vx(ngX);
 	std::vector<double> vy(ngX);
 	std::vector<double> vz(ngX*ngX);
+	double eps = 7.0/3.0 -4.0/3.0 -1.0;
 	#pragma omp parallel for private(qj)
 	for (qi = 0; qi<ngX; qi++) {
 		for (qj = 0; qj<ngX; qj++) {
 
-			qx = ((qi-ngX/2.)/ngX)*numRecip*pi;
+			qx = ((qi-ngX/2.)/ngX)*numRecip*pi + eps;
 			vx[qi] = qx;
-			qy = ((qj-ngX/2.)/ngX)*numRecip*pi;
+			qy = ((qj-ngX/2.)/ngX)*numRecip*pi + eps;
 			vy[qj] = qy;
-			vz[qi*ngX+qj] = S(vx[qi],vy[qj],posdata);
+			vz[qi*ngX+qj] = S(vx[qi],vy[qj],posdata) + eps;
 		}
 
 	}
