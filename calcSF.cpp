@@ -72,7 +72,7 @@ void initialiseVortices(list<CVortex>& vorticesList, bool& file){
 	char renderChar[100];
 	string renderStr;
 	oss.str("");
-	oss << "vort_ord_2000.csv";
+	oss << "vort_arr_1000";
 	cout <<"oss: " << oss.str() << endl;
 	renderStr = oss.str();
 	cout << renderStr << endl;
@@ -89,19 +89,21 @@ void initialiseVortices(list<CVortex>& vorticesList, bool& file){
 		double yval;
 		int a,b,c;
 		char delim;
+		string value;
+		getline (myfile,value,'\n');
 		while ( myfile.good() ){
+			myfile >> a;
+			myfile >> delim;
+
        		 	myfile >> xval;
 			xval *= 6.821230e-07;
 			myfile >> delim;
 
+			myfile >> b;
+			myfile >> delim;
+
             		myfile >> yval;
 			yval *= 6.821230e-07;
-			myfile >> delim;
-
-			myfile >> a;
-			myfile >> delim;
-
-			myfile >> b;
 			myfile >> delim;
 
 			myfile >> c;
@@ -121,7 +123,6 @@ double S(double qx, double qy, list<CVortex> posdata) {
 
 	for (list<CVortex>::iterator p=posdata.begin(); p!=posdata.end(); ++p ){
 		double sumq=0;
-
 		for (list<CVortex>::iterator q=posdata.begin(); q!=posdata.end(); ++q) {
 			sumq +=
 			cos( qx * (q->get_x() - p->get_x())
@@ -155,19 +156,9 @@ int main() {
 			vx[qi] = qx;
 			qy = ((qj-ngX/2.)/ngX)*numRecip*pi;
 			vy[qj] = qy;
-			vz[qi*ngX+qj] = S(qx,qy,posdata);
-
-			//plotdata << setw(20) << qx << setw(20) << qy << setw(20) << vz[qi*256+qj] << endl;
-			//sf=S(qx,qy,posdata);
-
-
-	//for (qx = -numRecip*pi; qx<=numRecip*pi; qx += 2*pi/20) {
-	//	for (qy = -numRecip*pi; qy<=numRecip*pi; qy += 2*pi/20) {
-			//sf=S(qx,qy,posdata);
-			//cout << setw(10) << qx << setw(10) << qy << setw(20) << sf << endl;
-			//plotdata << setw(20) << qx << setw(20) << qy << setw(20) << sf << endl;
+			vz[qi*ngX+qj] = S(vx[qi],vy[qj],posdata);
 		}
-		//plotdata << endl;
+
 	}
 	
 	ofstream dataX, dataY, dataZ;
@@ -178,9 +169,9 @@ int main() {
 	dataY.precision(6);
 	dataZ.precision(6);
 	
-	for (int ii=0; ii<ngX; ++ii){
+	for (int ii=0; ii<ngX; ii++){
 
-		for (int jj=0; jj<ngX; ++jj){
+		for (int jj=0; jj<ngX; jj++){
 		
 			dataX << setw(20) << vx[ii] << endl;
 			dataY << setw(20) << vy[jj] << endl;
