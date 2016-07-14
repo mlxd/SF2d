@@ -3,28 +3,10 @@
  * 	x and y positions and returns a file containing
  *  the structure factor - SFplotdata.txt.
  *
- *  The calculations are based on real space lattice
- *  spacings of a0=1e-7m
- *
- *  The data set must be at least as large as
- *  10e-7 < xval < 60e-7
- *  2e-7  < yval < 50e-7
- *  for everything outside this range is trimmed before
- *  calculation.
- *
- *  The range/resolution in reciprocal space is
- *  -3pi to 3pi in qx and qy in steps of pi/20.0
- *
- *
- *  Modifications need to be made to this program to allow
- *  for different densities and parameters to be specified.
- *
- *
- *
- * 	This was written by Jon Watkins - 2012
- *
+ * 	Original version written by Jon Watkins - 2012
+ *	Updated by Lee J. O'Riordan - 2016
  */
-
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -55,24 +37,21 @@ class CVortex{
 	}
 
     	double get_x(){
-			return x;
+		return x;
 	}
 
     	double get_y(){
-			return y;
+		return y;
 	}
 
     	double get_z(){
-			return z;
+		return z;
 	}
 };
 
-void initialiseVortices(list<CVortex>& vorticesList, bool& file){
-	ostringstream oss;
+void initialiseVortices(list<CVortex>& vorticesList, bool& file, ostringstream &oss){
 	char renderChar[100];
 	string renderStr;
-	oss.str("");
-	oss << "vort_arr_1000";
 	cout <<"oss: " << oss.str() << endl;
 	renderStr = oss.str();
 	cout << renderStr << endl;
@@ -135,56 +114,72 @@ double S(double qx, double qy, list<CVortex> posdata) {
 }
 
 
-int main() {
+int main(int argc, char *argv[]) {
 	int ngX=128;
 	double numRecip=2*pi;
+	
 	list<CVortex> posdata;
-
+	ostringstream oss;
+	
 	bool file;
-	initialiseVortices(posdata, file);
-	double sf,qx,qy;
-	int qi,qj;
+	double sf, qx, qy;
+	int qi, qj;
+	
 	std::vector<double> vx(ngX);
 	std::vector<double> vy(ngX);
 	std::vector<double> vz(ngX*ngX);
+	
 	double eps = 7.0/3.0 -4.0/3.0 -1.0;
-	#pragma omp parallel for private(qj)
-	for (qi = 0; qi<ngX; qi++) {
-		for (qj = 0; qj<ngX; qj++) {
+	
+	for(int count=1; count < argc; ++count){
+		oss.clear();
+		oss.str("");
+		oss << "vort_arr_" << argv[count];
+		cout << oss.str() << endl;
 
-			qx = ((qi-ngX/2.)/ngX)*numRecip*pi + eps;
-			vx[qi] = qx;
-			qy = ((qj-ngX/2.)/ngX)*numRecip*pi + eps;
-			vy[qj] = qy;
-			vz[qi*ngX+qj] = S(vx[qi],vy[qj],posdata) + eps;
+		initialiseVortices(posdata, file, oss);
+		#pragma omp parallel for private(qj)
+		for (qi = 0; qi<ngX; qi++) {
+			for (qj = 0; qj<ngX; qj++) {
+	
+				qx = ((qi-ngX/2.)/ngX)*numRecip*pi + eps;
+				vx[qi] = qx;
+				qy = ((qj-ngX/2.)/ngX)*numRecip*pi + eps;
+				vy[qj] = qy;
+				vz[qi*ngX+qj] = S(vx[qi],vy[qj],posdata) + eps;
+			}
+	
 		}
-
-	}
-	
-	ofstream dataX, dataY, dataZ;
-	dataX.open("x.csv");
-	dataY.open("y.csv");
-	dataZ.open("z.csv");
-	dataX.precision(6);
-	dataY.precision(6);
-	dataZ.precision(6);
-	
-	for (int ii=0; ii<ngX; ii++){
-
-		for (int jj=0; jj<ngX; jj++){
+		std::vector<std::string> filenames = {"_x.csv","_y.csv","_z.csv"};
+		ofstream dataX, dataY, dataZ;
+		dataX.open(argv[count] + filenames[0]);
+		dataY.open(argv[count] + filenames[1]);
+		dataZ.open(argv[count] + filenames[2]);
+		dataX.precision(7);
+		dataY.precision(7);
+		dataZ.precision(7);
 		
-			dataX << setw(20) << vx[ii] << endl;
-			dataY << setw(20) << vy[jj] << endl;
-			dataZ << vx[ii] << setw(20) << vy[jj] << setw(20) << vz[ii*ngX + jj] << endl;
-
+		for (int ii=0; ii<ngX; ii++){
+	
+			for (int jj=0; jj<ngX; jj++){
+			
+				dataX << setw(20) << vx[ii] << endl;
+				dataY << setw(20) << vy[jj] << endl;
+				dataZ << vx[ii] << setw(20) << vy[jj] << setw(20) << vz[ii*ngX + jj] << endl;
+	
+			}
+			dataZ << endl;
 		}
-		dataZ << endl;
+	
+		dataX.close();
+		dataY.close();
+		dataZ.close();
+
+		vx.clear();
+		vy.clear();
+		vz.clear();
+	
+		posdata.clear();
 	}
-
-	dataX.close();
-	dataY.close();
-	dataZ.close();
-	cout << "Structure Factor plot data written to SFplotdata.txt" << endl;
-
 	return 0;
 }
