@@ -18,7 +18,7 @@ LOOP: SF
         	((num = num+1000)) ; \
 		echo $${num} ; \
 		./SF $$num ; \
-		gnuplot  -e "sf='$${num}_z.csv'; num='$${num}'" plot.gp ; \
+		gnuplot -e "sf='$${num}_z.csv'; num='$${num}'" plot.gp ; \
 		cat ./stand.tex | sed 's/myfilename/$${num}_pic.tikz/g' | pdflatex ; \
 		mv texput.pdf SF_$${num}.pdf ; \
 	done

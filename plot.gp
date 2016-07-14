@@ -1,4 +1,4 @@
-load 'gnuplot-palettes/parula.pal'
+load '/Users/mlxd/Desktop/SF/gnuplot-palettes/parula.pal'
 set term tikz
 set output num."_pic.tikz"
 set size ratio 1
